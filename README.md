@@ -45,5 +45,5 @@ Library Management System/
 Syntecxhub Java Programming Internship
 
 ## Author
-Your Name
+Aishwarya Kolanu
 
