@@ -1,0 +1,270 @@
+import java.util.Scanner;
+import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+        Library library = new Library();
+
+        // Load previously saved books
+        try {
+            library.loadBooks();
+            System.out.println("Library data loaded successfully!");
+        } catch (IOException e) {
+            System.out.println("Error loading library data.");
+        }
+
+        int choice;
+
+        do {
+            System.out.println("\n================================");
+            System.out.println("    LIBRARY MANAGEMENT SYSTEM");
+            System.out.println("================================");
+            System.out.println("1. Add Book");
+            System.out.println("2. Remove Book");
+            System.out.println("3. Search Book");
+            System.out.println("4. Display All Books");
+            System.out.println("5. Exit");
+            System.out.println("================================");
+
+            System.out.print("Enter your choice: ");
+
+            try {
+                choice = Integer.parseInt(sc.nextLine().trim());
+
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number!");
+                continue;
+            }
+
+            switch (choice) {
+
+                case 1:
+                    System.out.print("Enter Book ID: ");
+
+                    try {
+                        int id = Integer.parseInt(sc.nextLine().trim());
+
+                        if (id <= 0) {
+                            System.out.println(
+                                    "Book ID must be positive!");
+                            break;
+                        }
+
+                        System.out.print("Enter Book Name: ");
+                        String name = sc.nextLine().trim();
+
+                        System.out.print("Enter Author Name: ");
+                        String author = sc.nextLine().trim();
+
+                        if (name.isEmpty() || author.isEmpty()
+                                || name.contains("|")
+                                || author.contains("|")) {
+                            System.out.println(
+                                    "Invalid book or author name!");
+                            break;
+                        }
+
+                        Book book = new Book(id, name, author);
+
+                        if (library.addBook(book)) {
+                            library.saveBooks();
+                        }
+
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid Book ID!");
+                    } catch (IOException e) {
+                        System.out.println("Error saving book!");
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Enter Book ID to remove: ");
+
+                    try {
+                        int removeId = Integer.parseInt(
+                                sc.nextLine().trim());
+
+                        if (library.removeBook(removeId)) {
+                            library.saveBooks();
+                        }
+
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid Book ID!");
+                    } catch (IOException e) {
+                        System.out.println("Error updating file!");
+                    }
+                    break;
+
+                case 3:
+                    System.out.print("Enter Book ID to search: ");
+
+                    try {
+                        int searchId = Integer.parseInt(
+                                sc.nextLine().trim());
+
+                        library.searchBook(searchId);
+
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid Book ID!");
+                    }
+                    break;
+
+                case 4:
+                    library.displayBooks();
+                    break;
+
+                case 5:
+                    System.out.println(
+                            "Thank you for using our library system!");
+                    break;
+
+                default:
+                    System.out.println(
+                            "Invalid choice! Please select 1 to 5.");
+            }
+
+        } while (choice != 5);
+
+        sc.close();
+    }
+}
+
+
+On Fri, 13 Nov, 2026, 22:16 Aishwarya Kolanu, <aishwaryakolanu29@gmail.com> wrote:
+
+import java.util.ArrayList;
+import java.io.*;
+
+public class Library {
+
+    private ArrayList<Book> books = new ArrayList<>();
+
+    private final String FILE_NAME = "books.txt";
+
+    // Add a book
+    public boolean addBook(Book book) {
+
+        for (Book b : books) {
+            if (b.getBookId() == book.getBookId()) {
+                System.out.println("Book ID already exists!");
+                return false;
+            }
+        }
+
+        books.add(book);
+        System.out.println("Book added successfully!");
+        return true;
+    }
+
+    // Remove a book
+    public boolean removeBook(int id) {
+
+        for (Book b : books) {
+            if (b.getBookId() == id) {
+                books.remove(b);
+                System.out.println("Book removed successfully!");
+                return true;
+            }
+        }
+
+        System.out.println("Book not found!");
+        return false;
+    }
+
+    // Search for a book
+    public void searchBook(int id) {
+
+        for (Book b : books) {
+            if (b.getBookId() == id) {
+                System.out.println("Book found!");
+                b.displayBook();
+                return;
+            }
+        }
+
+        System.out.println("Book not found!");
+    }
+
+    // Display all books
+    public void displayBooks() {
+
+        if (books.isEmpty()) {
+            System.out.println("No books available!");
+            return;
+        }
+
+        System.out.println("\n======= BOOK DETAILS =======");
+
+        for (Book b : books) {
+            b.displayBook();
+        }
+    }
+
+    // Save books into a file
+    public void saveBooks() throws IOException {
+
+        try (BufferedWriter writer =
+                new BufferedWriter(new FileWriter(FILE_NAME))) {
+
+            for (Book b : books) {
+                writer.write(b.getBookId() + "|" +
+                        b.getBookName() + "|" +
+                        b.getAuthorName());
+
+                writer.newLine();
+            }
+        }
+    }
+
+    // Load books from a file
+    public void loadBooks() throws IOException {
+
+        File file = new File(FILE_NAME);
+
+        if (!file.exists()) {
+            return;
+        }
+
+        try (BufferedReader reader =
+                new BufferedReader(new FileReader(file))) {
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+
+                String[] data = line.split("\\|", -1);
+
+                if (data.length == 3) {
+                    try {
+                        int id = Integer.parseInt(data[0]);
+
+                        if (id > 0 && !data[1].isEmpty()
+                                && !data[2].isEmpty()) {
+
+                            boolean duplicate = false;
+
+                            for (Book b : books) {
+                                if (b.getBookId() == id) {
+                                    duplicate = true;
+                                    break;
+                                }
+                            }
+
+                            if (!duplicate) {
+                                books.add(new Book(
+                                        id, data[1], data[2]));
+                            }
+                        }
+
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "Skipping invalid book record.");
+                    }
+                }
+            }
+        }
+    }
+}
